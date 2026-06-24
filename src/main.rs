@@ -7,7 +7,10 @@ use complex::*;
 mod view;
 use view::*;
 
-use macroquad::{color::{self, hsl_to_rgb}, prelude::*};
+use macroquad::{
+    color::{self, hsl_to_rgb},
+    prelude::*,
+};
 use rayon::prelude::*;
 
 const ZOOM_RATE: f64 = 3.; // # of doubles per second
@@ -25,7 +28,7 @@ fn update_fractal_texture<T: Fractal>(
     fractal: &T,
     view: &ComplexView,
     image: &mut Image,
-    colorer: &FractalColor,
+    colorer: &FractalColorType,
 ) {
     let w_pixels = image.width as usize;
     let buffer = image.get_image_data_mut();
@@ -60,7 +63,7 @@ async fn main() {
 
     let mandelbrot = Mandelbrot { max_iter: 100 };
 
-    let color = FractalColor::Banded(&create_colorset(500));
+    let color = FractalColorType::Banded(&create_colorset(500));
 
     update_fractal_texture(&mandelbrot, &view, &mut image, &color);
 
@@ -83,18 +86,6 @@ async fn main() {
             view.zoom(factor);
             update_fractal_texture(&mandelbrot, &view, &mut image, &color);
         }
-        // if is_key_down(KeyCode::Right) {
-        //     offset = (offset.0 + (1. / zoom) * get_frame_time() as f64, offset.1)
-        // }
-        // if is_key_down(KeyCode::Left) {
-        //     c_offset = (c_offset.0 - (1. / zoom) * get_frame_time() as f64, c_offset.1)
-        // }
-        // if is_key_down(KeyCode::Up) {
-        //     c_offset = (c_offset.0, c_offset.1 - (1. / zoom) * get_frame_time() as f64)
-        // }
-        // if is_key_down(KeyCode::Down) {
-        //     c_offset = (c_offset.0, c_offset.1 + (1. / zoom) * get_frame_time() as f64)
-        // }
 
         texture.update(&image);
         draw_texture(&texture, 0., 0., WHITE);

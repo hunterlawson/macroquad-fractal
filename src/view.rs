@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use crate::{complex::C64};
+use crate::complex::C64;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Dimension(pub f64, pub f64);
@@ -30,7 +30,7 @@ pub struct ComplexView {
 impl ComplexView {
     pub fn new(w_pixels: usize, h_pixels: usize, r_region: Dimension, offset: C64) -> Self {
         let i_ratio = h_pixels as f64 / w_pixels as f64;
-        let c_bounds= (r_region.1 - r_region.0) * i_ratio / 2.;
+        let c_bounds = (r_region.1 - r_region.0) * i_ratio / 2.;
         let c_region = Dimension(-1. * c_bounds, c_bounds);
         Self {
             pixel_dimensions: Dimension(w_pixels as f64, h_pixels as f64),

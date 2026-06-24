@@ -65,6 +65,9 @@ impl Mul<C64> for C64 {
 
     fn mul(self, rhs: C64) -> Self::Output {
         // ((a + bi)(c + di) = (ac - bd) + (ad + bc)i
-        Self(self.0 * rhs.0 - self.1 * rhs.1, self.0 * rhs.1 + self.1 * rhs.0)
+        Self(
+            self.0 * rhs.0 - self.1 * rhs.1,
+            self.0 * rhs.1 + self.1 * rhs.0,
+        )
     }
 }
