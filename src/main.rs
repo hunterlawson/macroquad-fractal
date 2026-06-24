@@ -63,17 +63,11 @@ async fn main() {
 
     let mandelbrot = Mandelbrot { max_iter: 100 };
 
-    let color = FractalColorType::Banded(&create_colorset(500));
+    let color = FractalColorType::Smooth(500.);
 
     update_fractal_texture(&mandelbrot, &view, &mut image, &color);
 
     loop {
-        // draw_text(format!("{} + {}i", c_offset.0, c_offset.1), 0., 50., 32., WHITE);
-
-        // if is_key_pressed(KeyCode::S) {
-        //     debug!("{}, {}", c_offset.0, c_offset.1);
-        // }
-
         let dt = get_frame_time() as f64;
 
         if is_key_down(KeyCode::Z) {
