@@ -7,14 +7,10 @@ use complex::*;
 mod view;
 use view::*;
 
-use macroquad::{color::hsl_to_rgb, prelude::*};
+use macroquad::{color::{self, hsl_to_rgb}, prelude::*};
 use rayon::prelude::*;
 
-// const MAX_ITERATIONS: u32 = 100;
-// const START_ZOOM: f64 = 1.;
-// // −0.20710786709396773
-// const START_C: (f64, f64) = (-0.7391795056397475, 0.20343230913332802);
-// const REGION_X: (f64, f64) = (-2., 1.5);
+const ZOOM_RATE: f64 = 3.; // # of doubles per second
 
 fn window_conf() -> Conf {
     Conf {
@@ -25,15 +21,12 @@ fn window_conf() -> Conf {
     }
 }
 
-fn get_color(x: f64) -> Color {
-    const COLOR_RANGE: f64 = 200.;
-
-    let h = (x % COLOR_RANGE) / COLOR_RANGE;
-
-    hsl_to_rgb(h as f32, 0.8, 0.5)
-}
-
-fn update_fractal_texture<T: Fractal>(fractal: &T, view: &ComplexView, image: &mut Image) {
+fn update_fractal_texture<T: Fractal>(
+    fractal: &T,
+    view: &ComplexView,
+    image: &mut Image,
+    colorer: &FractalColor,
+) {
     let w_pixels = image.width as usize;
     let buffer = image.get_image_data_mut();
     buffer
@@ -43,11 +36,8 @@ fn update_fractal_texture<T: Fractal>(fractal: &T, view: &ComplexView, image: &m
             for (x, px) in row.iter_mut().enumerate() {
                 // convert from screen-space to the mandelbrot space
                 let c = view.get_pixel_value(x, y);
-                let iterations = fractal.iterate(c);
-                let color = match iterations {
-                    None => BLACK,
-                    Some(x) => get_color(x),
-                };
+                let res = fractal.iterate(c);
+                let color = colorer.get_color(&res);
                 *px = color.into();
             }
         });
@@ -57,7 +47,6 @@ fn update_fractal_texture<T: Fractal>(fractal: &T, view: &ComplexView, image: &m
 async fn main() {
     let w = screen_width();
     let h = screen_height();
-    // let resolution = 5.;
 
     let mut image = Image::gen_image_color(w as u16, h as u16, BLACK);
     let texture = Texture2D::from_image(&image);
@@ -71,7 +60,9 @@ async fn main() {
 
     let mandelbrot = Mandelbrot { max_iter: 100 };
 
-    update_fractal_texture(&mandelbrot, &view, &mut image);
+    let color = FractalColor::Banded(&create_colorset(500));
+
+    update_fractal_texture(&mandelbrot, &view, &mut image, &color);
 
     loop {
         // draw_text(format!("{} + {}i", c_offset.0, c_offset.1), 0., 50., 32., WHITE);
@@ -80,18 +71,17 @@ async fn main() {
         //     debug!("{}, {}", c_offset.0, c_offset.1);
         // }
 
-        const ZOOM_RATE: f64 = 3.; // doubles per second
         let dt = get_frame_time() as f64;
 
         if is_key_down(KeyCode::Z) {
             let factor = 2f64.powf(ZOOM_RATE * dt);
             view.zoom(factor);
-            update_fractal_texture(&mandelbrot, &view, &mut image);
+            update_fractal_texture(&mandelbrot, &view, &mut image, &color);
         }
         if is_key_down(KeyCode::X) {
             let factor = 2f64.powf(-ZOOM_RATE * dt);
             view.zoom(factor);
-            update_fractal_texture(&mandelbrot, &view, &mut image);
+            update_fractal_texture(&mandelbrot, &view, &mut image, &color);
         }
         // if is_key_down(KeyCode::Right) {
         //     offset = (offset.0 + (1. / zoom) * get_frame_time() as f64, offset.1)
