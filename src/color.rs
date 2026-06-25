@@ -5,7 +5,7 @@ use crate::fractal::IterationResult;
 /// Create a simple looping colorset using hsl (0, 1)
 pub fn create_colorset(num: usize) -> Vec<Color> {
     if num == 0 {
-        return vec![]
+        return vec![];
     }
 
     (0..num)
@@ -49,8 +49,8 @@ impl<'a> FractalColorType<'a> {
         let mag = res.final_z.len_squared().sqrt();
         let smooth = iter as f64 - mag.log2().log2();
 
-        let h = (smooth % range) / range;
+        let h = (smooth % range) / range;;
 
-        hsl_to_rgb(h as f32, 0.8, 0.5)
+        hsl_to_rgb(h as f32, 1., 0.5 as f32)
     }
 }

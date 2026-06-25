@@ -1,7 +1,7 @@
-mod color;
-pub use color::*;
-
+mod julia;
 mod mandelbrot;
+
+pub use julia::*;
 pub use mandelbrot::*;
 
 use crate::complex::*;
@@ -14,7 +14,7 @@ pub trait Fractal: Send + Sync {
 }
 
 pub struct IterationResult {
-    max_iterations: u32,
-    iterations: Option<u32>,
-    final_z: C64,
+    pub max_iterations: u32,
+    pub iterations: Option<u32>,
+    pub final_z: C64,
 }

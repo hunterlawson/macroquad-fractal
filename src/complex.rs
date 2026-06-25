@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
 
 #[derive(Clone, Copy, Debug)]
 pub struct C64(pub f64, pub f64);
@@ -17,6 +17,22 @@ impl C64 {
     /// Create a new empy c64
     pub fn new() -> Self {
         Self(0., 0.)
+    }
+
+    pub fn a_squared(&self) -> f64 {
+        self.0 * self.0
+    }
+
+    pub fn b_squared(&self) -> f64 {
+        self.1 * self.1
+    }
+
+    /// Returns (z², |z|²). Both derive from the same a²/b² subexpressions,
+    /// so this is the fast form for an escape-time loop (3 real multiplies).
+    pub fn square_and_norm(self) -> (C64, f64) {
+        let a2 = self.0 * self.0;
+        let b2 = self.1 * self.1;
+        (C64(a2 - b2, 2. * self.0 * self.1), a2 + b2)
     }
 }
 
@@ -54,9 +70,26 @@ impl Mul<f64> for C64 {
     type Output = C64;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        let mut s2 = self;
-        s2 *= rhs;
-        s2
+        let mut c2 = self;
+        c2 *= rhs;
+        c2
+    }
+}
+
+impl DivAssign<f64> for C64 {
+    fn div_assign(&mut self, rhs: f64) {
+        (*self).0 = self.0 / rhs;
+        (*self).1 = self.1 / rhs;
+    }
+}
+
+impl Div<f64> for C64 {
+    type Output = C64;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        let mut c2 = self;
+        c2 /= rhs;
+        c2
     }
 }
 

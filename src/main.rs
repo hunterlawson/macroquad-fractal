@@ -1,25 +1,27 @@
-mod fractal;
-use fractal::*;
-
+mod color;
 mod complex;
-use complex::*;
-
+mod fractal;
 mod view;
-use view::*;
 
-use macroquad::{
-    color::{self, hsl_to_rgb},
-    prelude::*,
-};
+use macroquad::prelude::*;
 use rayon::prelude::*;
 
-const ZOOM_RATE: f64 = 3.; // # of doubles per second
+use crate::{
+    color::FractalColorType,
+    complex::C64,
+    fractal::{Fractal, Julia},
+    view::{ComplexView, Dimension},
+};
+
+const ZOOM_RATE: f64 = 2.; // # of doubles per second
+const PAN_RATE: f64 = 2.;
 
 fn window_conf() -> Conf {
     Conf {
         window_title: "Mandelbrot".to_owned(),
         window_width: 800,
         window_height: 800,
+        // fullscreen: true,
         ..Default::default()
     }
 }
@@ -54,31 +56,57 @@ async fn main() {
     let mut image = Image::gen_image_color(w as u16, h as u16, BLACK);
     let texture = Texture2D::from_image(&image);
 
-    let mut view = ComplexView::new(
-        w as usize,
-        h as usize,
-        Dimension(-2., 2.),
-        C64(-0.7391795056397475, 0.20343230913332802),
-    );
+    let mut view = ComplexView::new(w as usize, h as usize, Dimension(-1.75, 1.75), C64::new());
 
-    let mandelbrot = Mandelbrot { max_iter: 100 };
+    let mut fractal = Julia {
+        max_iter: 200,
+        c: C64(-0.5125, 0.5213),
+    };
 
-    let color = FractalColorType::Smooth(500.);
+    let color = FractalColorType::Smooth(100.);
 
-    update_fractal_texture(&mandelbrot, &view, &mut image, &color);
+    update_fractal_texture(&fractal, &view, &mut image, &color);
 
     loop {
         let dt = get_frame_time() as f64;
 
+        // Zoom
         if is_key_down(KeyCode::Z) {
             let factor = 2f64.powf(ZOOM_RATE * dt);
             view.zoom(factor);
-            update_fractal_texture(&mandelbrot, &view, &mut image, &color);
         }
         if is_key_down(KeyCode::X) {
             let factor = 2f64.powf(-ZOOM_RATE * dt);
             view.zoom(factor);
-            update_fractal_texture(&mandelbrot, &view, &mut image, &color);
+        }
+        // Pan
+        if is_key_down(KeyCode::Up) {
+            view.scaled_offset(&C64(0., PAN_RATE * dt));
+        }
+        if is_key_down(KeyCode::Down) {
+            view.scaled_offset(&C64(0., -PAN_RATE * dt));
+        }
+        if is_key_down(KeyCode::Left) {
+            view.scaled_offset(&C64(-PAN_RATE * dt, 0.));
+        }
+        if is_key_down(KeyCode::Right) {
+            view.scaled_offset(&C64(PAN_RATE * dt, 0.));
+        }
+
+        if is_key_down(KeyCode::Space) {
+            view.reset();
+        }
+
+        if is_any_key_down() {
+            update_fractal_texture(&fractal, &view, &mut image, &color);
+        }
+
+        if is_key_pressed(KeyCode::P) {
+            let mouse_pos = C64(
+                mouse_position().0 as f64 / w as f64,
+                mouse_position().1 as f64 / h as f64,
+            );
+            fractal.c = mouse_pos;
         }
 
         texture.update(&image);
