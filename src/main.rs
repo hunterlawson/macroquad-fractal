@@ -1,4 +1,3 @@
-mod color;
 mod complex;
 mod fractal;
 mod renderer;

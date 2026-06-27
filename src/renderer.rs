@@ -53,6 +53,7 @@ impl Renderer {
         gl_use_material(&self.material);
         // set uniforms per-fractal, some fractals will have different uniforms
         self.fractal.set_uniforms(&self.material);
+        // set colorer uniforms
         // set universal uniforms used by all fractals
         view.set_uniforms(&self.material);
         // draw full size quad to get the values to render the fractal
