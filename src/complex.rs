@@ -1,6 +1,8 @@
+#![allow(dead_code)]
+
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct C64(pub f64, pub f64);
 
 impl C64 {

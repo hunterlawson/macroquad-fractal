@@ -1,52 +1,53 @@
-use std::ops::Div;
+use macroquad::{
+    material::Material,
+    math::Vec2,
+    miniquad::{UniformDesc, UniformType},
+};
 
 use crate::complex::C64;
 
-#[derive(Clone, Copy, Debug)]
-pub struct Dimension(pub f64, pub f64);
-
-impl Div<f64> for Dimension {
-    type Output = Dimension;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Self(self.0 / rhs, self.1 / rhs)
-    }
-}
-
 /// Store some translation values that are only updated when the view changes
-#[derive(Debug, Default)]
-struct ScreenToComplexMapping {
+#[derive(Debug, Default, Clone, Copy)]
+struct ViewTranslation {
     base_re: f64,
     scale_re: f64,
     base_im: f64,
     scale_im: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+/// Describes a complex view mapped onto a screen-space view
 pub struct ComplexView {
-    pixel_dimensions: Dimension,
+    pub screen_pixel_position: Vec2,
+    pub pixel_dimensions: Vec2,
     offset_start: C64,
     offset: C64,
     /// The complex region is scaled to be the right aspect ratio
-    r_region: Dimension,
-    c_region: Dimension,
+    r_region: C64,
+    c_region: C64,
 
     zoom: f64,
     // zoomed regions
-    r_region_z: Dimension,
-    c_region_z: Dimension,
+    r_region_z: C64,
+    c_region_z: C64,
 
     // regenerate after every view change
-    view_translation: ScreenToComplexMapping,
+    view_translation: ViewTranslation,
 }
 
 impl ComplexView {
-    pub fn new(w_pixels: usize, h_pixels: usize, r_region: Dimension, offset: C64) -> Self {
-        let i_ratio = h_pixels as f64 / w_pixels as f64;
+    pub fn new(
+        screen_pixel_position: Vec2,
+        pixel_dimensions: Vec2,
+        r_region: C64,
+        offset: C64,
+    ) -> Self {
+        let i_ratio = pixel_dimensions.y as f64 / pixel_dimensions.x as f64;
         let c_bounds = (r_region.1 - r_region.0) * i_ratio / 2.;
-        let c_region = Dimension(-1. * c_bounds, c_bounds);
+        let c_region = C64(-1. * c_bounds, c_bounds);
         let mut view = Self {
-            pixel_dimensions: Dimension(w_pixels as f64, h_pixels as f64),
+            screen_pixel_position,
+            pixel_dimensions,
             offset_start: offset,
             offset: offset,
             r_region,
@@ -54,7 +55,7 @@ impl ComplexView {
             zoom: 1.,
             r_region_z: r_region,
             c_region_z: c_region,
-            view_translation: ScreenToComplexMapping::default(),
+            view_translation: ViewTranslation::default(),
         };
 
         view.update_view_translation();
@@ -62,13 +63,30 @@ impl ComplexView {
         view
     }
 
+    /// Get the uniform descriptions for the translation described by this view
+    pub fn uniform_descs() -> Vec<UniformDesc> {
+        vec![
+            UniformDesc::new("base_re", UniformType::Float1),
+            UniformDesc::new("scale_re", UniformType::Float1),
+            UniformDesc::new("base_im", UniformType::Float1),
+            UniformDesc::new("scale_im", UniformType::Float1),
+        ]
+    }
+
+    /// Set the material uniforms for the translation described by this view
+    pub fn set_uniforms(&self, material: &Material) {
+        let vt = self.view_translation;
+        material.set_uniform("base_re", vt.base_re as f32);
+        material.set_uniform("scale_re", vt.scale_re as f32);
+        material.set_uniform("base_im", vt.base_im as f32);
+        material.set_uniform("scale_im", vt.scale_im as f32);
+    }
+
     fn update_view_translation(&mut self) {
-        self.view_translation.base_re = self.r_region_z.0;
-        self.view_translation.scale_re =
-            (self.r_region_z.1 - self.r_region_z.0) / self.pixel_dimensions.0;
-        self.view_translation.base_im = self.c_region_z.1;
-        self.view_translation.scale_im =
-            (self.c_region_z.0 - self.c_region_z.1) / self.pixel_dimensions.1;
+        self.view_translation.base_re = self.r_region_z.0 + self.offset.0;
+        self.view_translation.scale_re = self.r_region_z.1 - self.r_region_z.0;
+        self.view_translation.base_im = self.c_region_z.1 + self.offset.1;
+        self.view_translation.scale_im = self.c_region_z.0 - self.c_region_z.1;
     }
 
     /// Apply a zoom factor.
@@ -84,8 +102,8 @@ impl ComplexView {
     /// Apply an offset scaled by the current zoom.
     /// The visible width is `region / zoom`, so a constant on-screen pan
     /// means a complex-space step proportional to `1 / zoom`.
-    pub fn scaled_offset(&mut self, offset: &C64) {
-        self.offset += *offset / self.zoom;
+    pub fn scaled_offset(&mut self, offset: C64) {
+        self.offset += offset / self.zoom;
         self.update_view_translation();
     }
 
@@ -96,14 +114,5 @@ impl ComplexView {
         self.offset = self.offset_start;
         self.zoom = 1.;
         self.update_view_translation();
-    }
-
-    /// Get a complex number from the view for the given pixel
-    pub fn get_pixel_value(&self, x: usize, y: usize) -> C64 {
-        let a = self.view_translation.base_re + x as f64 * self.view_translation.scale_re;
-        // Flip the complex plane because y = 0 is the top of the screen
-        let b = self.view_translation.base_im + y as f64 * self.view_translation.scale_im;
-
-        C64(a, b) + self.offset
     }
 }

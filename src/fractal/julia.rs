@@ -1,29 +1,33 @@
-use crate::{
-    complex::C64,
-    fractal::{Fractal, IterationResult},
+use macroquad::{
+    material::Material,
+    math::Vec2,
+    miniquad::{UniformDesc, UniformType},
 };
+
+use crate::fractal::Fractal;
+
+const JULIA_FRAGMENT_SHADER: &'static str = include_str!("../../shaders/julia.frag");
 
 pub struct Julia {
     pub max_iter: u32,
-    pub c: C64,
+    /// Starting c value
+    pub c: Vec2,
 }
 
 impl Fractal for Julia {
-    fn iterate(&self, mut z: C64) -> IterationResult {
-        let mut iter = 0;
-        loop {
-            let (z_sq, norm) = z.square_and_norm();
-            if norm > 4. || iter == self.max_iter {
-                break;
-            }
-            z = z_sq + self.c;
-            iter += 1;
-        }
+    fn fragment_shader(&self) -> &'static str {
+        JULIA_FRAGMENT_SHADER
+    }
 
-        IterationResult {
-            max_iterations: self.max_iter,
-            iterations: (iter != self.max_iter).then_some(iter),
-            final_z: z,
-        }
+    fn uniform_descs(&self) -> Vec<UniformDesc> {
+        vec![
+            UniformDesc::new("max_iter", UniformType::Int1),
+            UniformDesc::new("c", UniformType::Float2),
+        ]
+    }
+
+    fn set_uniforms(&self, material: &Material) {
+        material.set_uniform("max_iter", self.max_iter as i32);
+        material.set_uniform("c", self.c);
     }
 }
