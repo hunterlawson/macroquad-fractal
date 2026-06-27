@@ -1,7 +1,7 @@
 # TODO
 
-- [ ] Gpu shader
+- [x] Gpu shader
 - [ ] Unlimited zoom (perterbation theory)
-- [ ] anti-aliasing
+- [x] anti-aliasing
 - [ ] improved coloring
 - [ ] shading

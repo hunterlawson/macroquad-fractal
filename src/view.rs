@@ -70,6 +70,7 @@ impl ComplexView {
             UniformDesc::new("scale_re", UniformType::Float1),
             UniformDesc::new("base_im", UniformType::Float1),
             UniformDesc::new("scale_im", UniformType::Float1),
+            UniformDesc::new("pixel_dimensions", UniformType::Float2)
         ]
     }
 
@@ -80,6 +81,7 @@ impl ComplexView {
         material.set_uniform("scale_re", vt.scale_re as f32);
         material.set_uniform("base_im", vt.base_im as f32);
         material.set_uniform("scale_im", vt.scale_im as f32);
+        material.set_uniform("pixel_dimensions", self.pixel_dimensions);
     }
 
     fn update_view_translation(&mut self) {
