@@ -1,5 +1,11 @@
 # Fractal Renderer Using Rust + Macroquad
 
+![mandelbrot](screenshots/screenshot_1.png)
+
+![julia](screenshots/screenshot_3.png)
+
+![orbits rendering](screenshots/screenshot_2.png)
+
 ## Features
 
 - [x] Julia and Mandelbrot set rendering
