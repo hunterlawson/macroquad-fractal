@@ -2,6 +2,8 @@
 
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub};
 
+use macroquad::math::Vec2;
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct C64(pub f64, pub f64);
 
@@ -35,6 +37,12 @@ impl C64 {
         let a2 = self.0 * self.0;
         let b2 = self.1 * self.1;
         (C64(a2 - b2, 2. * self.0 * self.1), a2 + b2)
+    }
+}
+
+impl From<Vec2> for C64 {
+    fn from(value: Vec2) -> Self {
+        Self(value.x as f64, value.y as f64)
     }
 }
 

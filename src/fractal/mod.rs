@@ -6,6 +6,8 @@ use macroquad::{material::Material, math::vec2, miniquad::UniformDesc};
 pub use mandelbrot::*;
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
+use crate::complex::C64;
+
 #[derive(EnumIter, Display, PartialEq, Clone, Copy, EnumString)]
 pub enum FractalType {
     Mandelbrot,
@@ -42,4 +44,6 @@ pub trait Fractal {
     /// Must set the uniform descriptions on the material first otherwise
     /// this will not work
     fn set_uniforms(&self, material: &Material);
+    /// Return the orbit for the given complex point
+    fn orbit(&self, point: C64) -> Vec<C64>;
 }

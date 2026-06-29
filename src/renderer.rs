@@ -46,6 +46,11 @@ impl Renderer {
         self.fractal = fractal;
     }
 
+    /// Get a reference to the fractal being rendered
+    pub fn fractal(&self) -> &dyn Fractal {
+        self.fractal.as_ref()
+    }
+
     /// Render the fractal to the screen using the shader
     pub fn render(&self, view: &ComplexView) {
         // bind -> set uniforms -> draw -> unbind

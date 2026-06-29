@@ -1,6 +1,7 @@
+use line_clipping::{LineSegment, Point, Window, cohen_sutherland::clip_line};
 use macroquad::{
     material::Material,
-    math::Vec2,
+    math::{Vec2, vec2},
     miniquad::{UniformDesc, UniformType},
 };
 
@@ -70,7 +71,7 @@ impl ComplexView {
             UniformDesc::new("scale_re", UniformType::Float1),
             UniformDesc::new("base_im", UniformType::Float1),
             UniformDesc::new("scale_im", UniformType::Float1),
-            UniformDesc::new("pixel_dimensions", UniformType::Float2)
+            UniformDesc::new("pixel_dimensions", UniformType::Float2),
         ]
     }
 
@@ -116,5 +117,67 @@ impl ComplexView {
         self.offset = self.offset_start;
         self.zoom = 1.;
         self.update_view_translation();
+    }
+
+    /// Return whether or not the given screen-space pixel coordinate is inside this view
+    pub fn in_view(&self, pos: &Vec2) -> bool {
+        (pos.x > self.screen_pixel_position.x
+            && pos.x < self.screen_pixel_position.x + self.pixel_dimensions.x)
+            && (pos.y > self.screen_pixel_position.y
+                && pos.y < self.screen_pixel_position.y + self.pixel_dimensions.y)
+    }
+
+    /// Clip a line to fall inside the view
+    pub fn clip_line(&self, line: (Vec2, Vec2)) -> Option<(Vec2, Vec2)> {
+        let window = Window::new(
+            self.screen_pixel_position.x as f64,
+            self.screen_pixel_position.x as f64 + self.pixel_dimensions.x as f64,
+            self.screen_pixel_position.y as f64,
+            self.screen_pixel_position.y as f64 + self.pixel_dimensions.y as f64,
+        );
+        let line = LineSegment::new(
+            Point::new(line.0.x as f64, line.0.y as f64),
+            Point::new(line.1.x as f64, line.1.y as f64),
+        );
+
+        clip_line(line, window).map(|l| {
+            let v1 = vec2(l.p1.x as f32, l.p1.y as f32);
+            let v2 = vec2(l.p2.x as f32, l.p2.y as f32);
+            (v1, v2)
+        })
+    }
+
+    /// Get a complex number in the view from the given screen-space coordinate
+    pub fn screen_to_complex(&self, pos: &Vec2) -> Option<C64> {
+        // check that the mouse isn't within bounds of the view's pixel space
+        if !self.in_view(&pos) {
+            return None;
+        }
+
+        // convert from screen-space to the view's pixel space
+        let scale_x = ((pos.x - self.screen_pixel_position.x) / self.pixel_dimensions.x) as f64;
+        let scale_y = ((pos.y - self.screen_pixel_position.y) / self.pixel_dimensions.y) as f64;
+
+        Some(C64(
+            self.view_translation.base_re + scale_x * self.view_translation.scale_re,
+            self.view_translation.base_im + scale_y * self.view_translation.scale_im,
+        ))
+    }
+
+    /// Convert from the view's complex space to screen-space pixel coordinates
+    pub fn complex_to_screen(&self, c: &C64) -> Vec2 {
+        // normalize the complex number
+        let re_norm = (c.0 - self.view_translation.base_re) / self.view_translation.scale_re;
+        let im_norm = (c.1 - self.view_translation.base_im) / self.view_translation.scale_im;
+
+        // scale to pixels
+        let mut pix_x = re_norm as f32 * self.pixel_dimensions.x;
+        let mut pix_y = im_norm as f32 * self.pixel_dimensions.y;
+
+        // offset to the fractal position
+        pix_x += self.screen_pixel_position.x;
+        pix_y += self.screen_pixel_position.y;
+
+        vec2(pix_x, pix_y)
     }
 }
