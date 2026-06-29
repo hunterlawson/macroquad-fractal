@@ -1,10 +1,13 @@
 #![allow(dead_code)]
 
-use std::{fmt::Display, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub}};
+use std::{
+    fmt::Display,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub},
+};
 
 use macroquad::math::Vec2;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct C64(pub f64, pub f64);
 
 impl C64 {

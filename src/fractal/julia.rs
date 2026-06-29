@@ -1,6 +1,6 @@
 use macroquad::{
     material::Material,
-    math::Vec2,
+    math::{Vec2, vec2},
     miniquad::{UniformDesc, UniformType},
 };
 
@@ -43,5 +43,17 @@ impl Fractal for Julia {
         }
 
         output
+    }
+
+    fn input_parameter(&mut self, c: C64) {
+        self.c = vec2(c.0 as f32, c.1 as f32);
+    }
+
+    fn set_max_iter(&mut self, max_iter: u32) {
+        self.max_iter = max_iter;
+    }
+
+    fn max_iter(&self) -> u32 {
+        self.max_iter
     }
 }

@@ -36,4 +36,12 @@ impl Fractal for Mandelbrot {
 
         output
     }
+
+    fn set_max_iter(&mut self, max_iter: u32) {
+        self.max_iter = max_iter;
+    }
+
+    fn max_iter(&self) -> u32 {
+        self.max_iter
+    }
 }

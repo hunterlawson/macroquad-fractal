@@ -9,7 +9,7 @@ use macroquad::{
     window::clear_background,
 };
 
-use crate::{fractal::Fractal, view::ComplexView};
+use crate::{complex::C64, fractal::Fractal, view::ComplexView};
 
 const VERT_SHADER: &'static str = include_str!("../shaders/fractal.vert");
 
@@ -18,7 +18,8 @@ pub struct Renderer {
     fractal: Box<dyn Fractal>,
     material: Material,
     target: Option<RenderTarget>,
-    view: Option<ComplexView>,
+    cached_view: Option<ComplexView>,
+    render_dirty: bool,
 }
 
 impl Renderer {
@@ -27,7 +28,8 @@ impl Renderer {
             material: Self::build_material(&*fractal),
             fractal,
             target: None,
-            view: None,
+            cached_view: None,
+            render_dirty: true,
         }
     }
 
@@ -52,6 +54,7 @@ impl Renderer {
     pub fn set_fractal(&mut self, fractal: Box<dyn Fractal>) {
         self.material = Self::build_material(&*fractal);
         self.fractal = fractal;
+        self.render_dirty = true;
     }
 
     /// Get a reference to the fractal being rendered
@@ -59,12 +62,31 @@ impl Renderer {
         self.fractal.as_ref()
     }
 
+    /// Input a point into the underlying fractal
+    ///
+    /// Not all fractals actually use any input points
+    pub fn set_fractal_input_parameter(&mut self, point: C64) {
+        self.fractal.input_parameter(point);
+        self.render_dirty = true;
+    }
+
+    /// Set the underlying escape time fractal's maximum iteration value
+    pub fn set_fractal_max_iter(&mut self, max_iter: u32) {
+        self.fractal.set_max_iter(max_iter);
+        self.render_dirty = true;
+    }
+
+    /// Get the underlying escape time fractal's maximum iteration value
+    pub fn fractal_max_iter(&self) -> u32 {
+        self.fractal.max_iter()
+    }
+
     /// Draw the fractal to the screen from the rendered texture and view
     pub fn draw(&self) {
         let Some(target) = &self.target else {
             return;
         };
-        let Some(view) = &self.view else {
+        let Some(view) = &self.cached_view else {
             return;
         };
 
@@ -81,7 +103,7 @@ impl Renderer {
         );
     }
 
-    /// Render the fractal with the given view
+    /// Forced render the fractal with the given view
     pub fn render(&mut self, view: &ComplexView) {
         let dim = view.pixel_dimensions;
         let pos = view.screen_pixel_position;
@@ -102,8 +124,8 @@ impl Renderer {
         // Clone is a cheap handle copy.
         let target = self.target.clone().unwrap();
 
-        // Save the view for draw()
-        self.view = Some(view.clone());
+        // Cache the view
+        self.cached_view = Some(view.clone());
 
         // Create camera and bind render target
         let mut camera = Camera2D::from_display_rect(Rect::new(pos.x, pos.y, dim.x, dim.y));
@@ -134,5 +156,25 @@ impl Renderer {
 
         // Reset camera
         set_default_camera();
+    }
+
+    /// Render the fractal with the given view only if there are changes that need rendering:
+    ///
+    /// - changes to the underlying fractal
+    /// - changes to the renderer
+    /// - changes to the cached view
+    /// 
+    /// Returns `true` if it triggered a re-render of the fractal image
+    pub fn render_cached(&mut self, view: &ComplexView) -> bool {
+        if self.cached_view.as_ref() != Some(view) {
+            self.render_dirty = true;
+        }
+        if self.render_dirty {
+            self.render(view);
+            self.render_dirty = false;
+            return true;
+        }
+
+        false
     }
 }

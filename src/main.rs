@@ -11,6 +11,8 @@ use crate::{complex::C64, fractal::FractalType, renderer::Renderer, view::Comple
 
 const ZOOM_RATE: f64 = 2.; // # of doubles per second
 const PAN_RATE: f64 = 2.;
+const DEFAULT_MAX_ITER: u32 = 200;
+const ITER_DELTA: u32 = 10;
 
 fn window_conf() -> Conf {
     Conf {
@@ -35,8 +37,10 @@ async fn main() {
 
     // Renderer
     let mut renderer = Renderer::new(fractal_type.make());
-    renderer.render(&view); // Render initial image
-    let mut re_render = false;
+
+    // Toggle fractal input values under mouse pointer
+    let mut fractal_input = false;
+    let mut last_mouse_pos: Vec2 = mouse_position().into();
 
     // Toggle rendering the orbit of values under the mouse pointer
     let mut render_orbits = false;
@@ -54,7 +58,10 @@ async fn main() {
             fractal_type = fractal_type.next();
             renderer.set_fractal(fractal_type.make());
             view.reset();
-            re_render = true;
+        }
+        // Toggle fractal input values under mouse pointer
+        if is_key_pressed(KeyCode::I) {
+            fractal_input = !fractal_input;
         }
         // Toggle rendering orbits
         if is_key_pressed(KeyCode::O) {
@@ -68,50 +75,55 @@ async fn main() {
         if is_key_down(KeyCode::Z) {
             let factor = 2f64.powf(ZOOM_RATE * dt);
             view.zoom(factor);
-            re_render = true;
         }
         if is_key_down(KeyCode::X) {
             let factor = 2f64.powf(-ZOOM_RATE * dt);
             view.zoom(factor);
-            re_render = true;
         }
         // Zoom with mouse scroll wheel
         if mouse_wheel_y != 0. {
             let factor = 2f64.powf(mouse_wheel_y as f64 * dt / 1.5);
             view.zoom(factor);
-            re_render = true;
+        }
+        // Iter change
+        if is_key_pressed(KeyCode::Up) {
+            renderer.set_fractal_max_iter(renderer.fractal_max_iter() + ITER_DELTA);
+        }
+        if is_key_pressed(KeyCode::Down) && renderer.fractal_max_iter() >= ITER_DELTA {
+            renderer.set_fractal_max_iter(renderer.fractal_max_iter() - ITER_DELTA);
         }
         // Pan
-        if is_key_down(KeyCode::Up) || is_key_down(KeyCode::W) {
+        if is_key_down(KeyCode::W) {
             view.scaled_offset(C64(0., PAN_RATE * dt));
-            re_render = true;
         }
-        if is_key_down(KeyCode::Down) || is_key_down(KeyCode::S) {
+        if is_key_down(KeyCode::S) {
             view.scaled_offset(C64(0., -PAN_RATE * dt));
-            re_render = true;
         }
-        if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
+        if is_key_down(KeyCode::A) {
             view.scaled_offset(C64(-PAN_RATE * dt, 0.));
-            re_render = true;
         }
-        if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
+        if is_key_down(KeyCode::D) {
             view.scaled_offset(C64(PAN_RATE * dt, 0.));
-            re_render = true;
         }
-
+        // Reset view
         if is_key_pressed(KeyCode::Space) {
             view.reset();
-            re_render = true;
         }
 
-        if re_render {
-            renderer.render(&view);
-            re_render = false;
+        // Input into fractal if enabled
+        if fractal_input
+            && let Some(point) = view.screen_to_complex(&mouse_pos)
+            && mouse_pos != last_mouse_pos
+        {
+            renderer.set_fractal_input_parameter(point);
         }
+
+        // Re-render if not cached
+        let cached_render = !renderer.render_cached(&view);
 
         renderer.draw();
 
-        // render orbits
+        // Render orbits
         if render_orbits && let Some(c) = view.screen_to_complex(&mouse_pos) {
             // map points in the orbit to the screen
             let points: Vec<Vec2> = renderer
@@ -127,16 +139,20 @@ async fn main() {
             }
         }
 
-        // draw display elements
+        // Draw display elements
         if render_overlay {
             let text_elements = vec![
                 format!("FPS: {}", get_fps()),
                 format!("Fractal: {}", fractal_type),
+                format!("Max iterations: {}", renderer.fractal_max_iter()),
                 format!("View: {}", view),
                 format!(
                     "C: {}",
                     view.screen_to_complex(&mouse_pos).unwrap_or(C64::new())
                 ),
+                format!("Input C: {}", fractal_input),
+                format!("View orbits: {}", render_orbits),
+                format!("Cached render: {}", cached_render)
             ];
             for (i, element) in text_elements.iter().enumerate() {
                 draw_text(element, 0., 20. + i as f32 * 20., 25., WHITE);
@@ -156,6 +172,8 @@ async fn main() {
                 image.export_png(path.to_str().unwrap());
             }
         }
+
+        last_mouse_pos = mouse_pos;
 
         next_frame().await;
     }

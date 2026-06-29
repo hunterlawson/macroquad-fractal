@@ -10,7 +10,7 @@ use macroquad::{
 use crate::complex::C64;
 
 /// Store some translation values that are only updated when the view changes
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 struct ViewTranslation {
     base_re: f64,
     scale_re: f64,
@@ -18,7 +18,7 @@ struct ViewTranslation {
     scale_im: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 /// Describes a complex view mapped onto a screen-space view
 pub struct ComplexView {
     pub screen_pixel_position: Vec2,
