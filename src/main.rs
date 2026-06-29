@@ -26,7 +26,7 @@ async fn main() {
     let h = screen_height();
 
     // View
-    let mut view = ComplexView::new(vec2(w, h), vec2(w, h), C64(-2., 2.), C64(0., 0.));
+    let mut view = ComplexView::new(vec2(0., 0.), vec2(w, h), C64(-2., 2.), C64(0., 0.));
 
     // Shader
     let mut fractal_type = FractalType::Mandelbrot;
