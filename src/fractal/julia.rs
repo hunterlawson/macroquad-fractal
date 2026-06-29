@@ -35,10 +35,10 @@ impl Fractal for Julia {
         let mut output = vec![];
         let mut z = point;
         for _ in 0..self.max_iter {
+            output.push(z);
             if z.len_squared() > 4. {
                 break;
             }
-            output.push(z);
             z = z * z + self.c.into();
         }
 
