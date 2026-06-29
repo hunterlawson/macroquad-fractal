@@ -1,30 +1,40 @@
 # Fractal Renderer Using Rust + Macroquad
 
-![mandelbrot](screenshots/screenshot_1.png)
+Real-time GPU-accelerated fractal renderer built in Rust using Macroquad. Supports Mandelbrot and Julia set rendering implemented in GLSL fragment shaders.
 
-![julia](screenshots/screenshot_3.png)
-
-![orbits rendering](screenshots/screenshot_2.png)
+| Mandelbrot Set | Julia Set | Orbit Rendering |
+| -------------- | --------- | --------------- |
+| ![mandelbrot](screenshots/screenshot_1.png) | ![julia](screenshots/screenshot_3.png) | ![orbits](screenshots/screenshot_2.png) |
 
 ## Features
 
-- [x] Julia and Mandelbrot set rendering
-- [x] Smooth panning and zooming
-- [x] Rendering on GPU via shaders
-- [x] 4x supersampling per pixel
+- Julia and Mandelbrot set rendering entirely on the GPU using custom fragment shaders
+- Image smoothing using GPU-accelerated 4x supersampling
+- Smooth panning and zooming using a custom screen-to-complex plane view manager
+- Interactive orbit visualization
+- Render caching only re-renders the image when the view changes
+- Trait-based architecture for swapping fractals at runtime
+
+## Running
+
+```sh
+cargo run --release
+```
 
 ## Controls
 
 - `WASD / Arrow keys`: pan camera
 - `Mousewheel / Z / X`: zoom in/out
 - `Spacebar`: reset view
-- `R`: swap between mandelbrot and julia rendering
+- `R`: swap between Mandelbrot and Julia rendering
 - `O`: enable/disable rendering orbits
 - `T`: enable/disable overlay
 - `Q`: save screenshot
 
-## TODO
+## Roadmap
 
-- [ ] Unlimited zoom
-- [ ] improved coloring
-- [ ] shading
+- [ ] Unlimited zoom (currently limited by GPU single-precision 32-bit floats)
+- [ ] Improved coloring
+- [ ] Shading
+- [ ] WASM optimizations (remove rfd)
+- [ ] Runtime custom fractals and function parsing

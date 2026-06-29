@@ -1,7 +1,14 @@
 [package]
 name = "macroquad-fractal"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+license = "MIT"
+authors = ["Hunter Lawson"]
+description = "A GPU-accelerated Mandelbrot and Julia set fractal renderer built with Rust and Macroquad."
+repository = "https://github.com/hunterlawson/macroquad-fractal"
+readme = "README.md"
+keywords = ["fractal", "mandelbrot", "julia", "shader", "macroquad"]
+categories = ["graphics", "visualization"]
 
 [dependencies]
 line-clipping = "0.3.7"
