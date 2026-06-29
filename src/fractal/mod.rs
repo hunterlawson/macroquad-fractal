@@ -19,9 +19,9 @@ pub enum FractalType {
 impl FractalType {
     pub fn make(&self) -> Box<dyn Fractal> {
         match *self {
-            FractalType::Mandelbrot => Box::new(Mandelbrot { max_iter: 100 }),
+            FractalType::Mandelbrot => Box::new(Mandelbrot { max_iter: 200 }),
             FractalType::Julia => Box::new(Julia {
-                max_iter: 100,
+                max_iter: 200,
                 c: vec2(-0.5125, 0.5213),
             }),
         }

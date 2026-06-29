@@ -14,6 +14,8 @@
 - `Spacebar`: reset view
 - `R`: swap between mandelbrot and julia rendering
 - `O`: enable/disable rendering orbits
+- `T`: enable/disable overlay
+- `Q`: save screenshot
 
 ## TODO
 

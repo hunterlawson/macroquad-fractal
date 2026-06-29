@@ -186,10 +186,14 @@ impl ComplexView {
 
 impl Display for ComplexView {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let vt = self.view_translation;
         write!(
             f,
             "re ~ [{:.8}, {:.8}],  im ~ [{:.8}i, {:.8}i]",
-            self.r_region_z.0, self.r_region_z.1, self.c_region_z.0, self.c_region_z.1
+            vt.base_re,
+            vt.base_re + vt.scale_re,
+            vt.base_im,
+            vt.base_im + vt.scale_im
         )
     }
 }

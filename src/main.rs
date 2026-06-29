@@ -3,6 +3,8 @@ mod fractal;
 mod renderer;
 mod view;
 
+use std::env;
+
 use macroquad::prelude::*;
 
 use crate::{complex::C64, fractal::FractalType, renderer::Renderer, view::ComplexView};
@@ -33,6 +35,8 @@ async fn main() {
 
     // Renderer
     let mut renderer = Renderer::new(fractal_type.make());
+    renderer.render(&view); // Render initial image
+    let mut re_render = false;
 
     // Toggle rendering the orbit of values under the mouse pointer
     let mut render_orbits = false;
@@ -50,6 +54,7 @@ async fn main() {
             fractal_type = fractal_type.next();
             renderer.set_fractal(fractal_type.make());
             view.reset();
+            re_render = true;
         }
         // Toggle rendering orbits
         if is_key_pressed(KeyCode::O) {
@@ -63,35 +68,48 @@ async fn main() {
         if is_key_down(KeyCode::Z) {
             let factor = 2f64.powf(ZOOM_RATE * dt);
             view.zoom(factor);
+            re_render = true;
         }
         if is_key_down(KeyCode::X) {
             let factor = 2f64.powf(-ZOOM_RATE * dt);
             view.zoom(factor);
+            re_render = true;
         }
         // Zoom with mouse scroll wheel
         if mouse_wheel_y != 0. {
             let factor = 2f64.powf(mouse_wheel_y as f64 * dt / 1.5);
             view.zoom(factor);
+            re_render = true;
         }
         // Pan
         if is_key_down(KeyCode::Up) || is_key_down(KeyCode::W) {
             view.scaled_offset(C64(0., PAN_RATE * dt));
+            re_render = true;
         }
         if is_key_down(KeyCode::Down) || is_key_down(KeyCode::S) {
             view.scaled_offset(C64(0., -PAN_RATE * dt));
+            re_render = true;
         }
         if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
             view.scaled_offset(C64(-PAN_RATE * dt, 0.));
+            re_render = true;
         }
         if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
             view.scaled_offset(C64(PAN_RATE * dt, 0.));
+            re_render = true;
         }
 
         if is_key_pressed(KeyCode::Space) {
             view.reset();
+            re_render = true;
         }
 
-        renderer.render(&view);
+        if re_render {
+            renderer.render(&view);
+            re_render = false;
+        }
+
+        renderer.draw();
 
         // render orbits
         if render_orbits && let Some(c) = view.screen_to_complex(&mouse_pos) {
@@ -108,19 +126,37 @@ async fn main() {
                 }
             }
         }
-        
+
         // draw display elements
         if render_overlay {
             let text_elements = vec![
                 format!("FPS: {}", get_fps()),
                 format!("Fractal: {}", fractal_type),
                 format!("View: {}", view),
-                format!("C: {}", view.screen_to_complex(&mouse_pos).unwrap_or(C64::new()))
+                format!(
+                    "C: {}",
+                    view.screen_to_complex(&mouse_pos).unwrap_or(C64::new())
+                ),
             ];
             for (i, element) in text_elements.iter().enumerate() {
                 draw_text(element, 0., 20. + i as f32 * 20., 25., WHITE);
             }
         }
+
+        // Save screenshot
+        if is_key_pressed(KeyCode::Q) {
+            let image = get_screen_data();
+            let file_path = rfd::FileDialog::new()
+                .set_title("Save Screenshot As")
+                .set_file_name("screenshot.png")
+                .set_directory(env::current_dir().unwrap())
+                .save_file();
+
+            if let Some(path) = file_path {
+                image.export_png(path.to_str().unwrap());
+            }
+        }
+
         next_frame().await;
     }
 }
