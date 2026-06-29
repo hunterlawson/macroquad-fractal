@@ -37,9 +37,13 @@ async fn main() {
     // Toggle rendering the orbit of values under the mouse pointer
     let mut render_orbits = false;
 
+    // Toggle overlay
+    let mut render_overlay = true;
+
     loop {
         let dt = get_frame_time() as f64;
         let mouse_pos: Vec2 = mouse_position().into();
+        let (_, mouse_wheel_y) = mouse_wheel();
 
         // Switch fractal. Must run BEFORE render()
         if is_key_pressed(KeyCode::R) {
@@ -51,7 +55,11 @@ async fn main() {
         if is_key_pressed(KeyCode::O) {
             render_orbits = !render_orbits;
         }
-        // Zoom
+        // Toggle rendering overlay
+        if is_key_pressed(KeyCode::T) {
+            render_overlay = !render_overlay;
+        }
+        // Zoom with keys
         if is_key_down(KeyCode::Z) {
             let factor = 2f64.powf(ZOOM_RATE * dt);
             view.zoom(factor);
@@ -60,17 +68,22 @@ async fn main() {
             let factor = 2f64.powf(-ZOOM_RATE * dt);
             view.zoom(factor);
         }
+        // Zoom with mouse scroll wheel
+        if mouse_wheel_y != 0. {
+            let factor = 2f64.powf(mouse_wheel_y as f64 * dt / 1.5);
+            view.zoom(factor);
+        }
         // Pan
-        if is_key_down(KeyCode::Up) {
+        if is_key_down(KeyCode::Up) || is_key_down(KeyCode::W) {
             view.scaled_offset(C64(0., PAN_RATE * dt));
         }
-        if is_key_down(KeyCode::Down) {
+        if is_key_down(KeyCode::Down) || is_key_down(KeyCode::S) {
             view.scaled_offset(C64(0., -PAN_RATE * dt));
         }
-        if is_key_down(KeyCode::Left) {
+        if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
             view.scaled_offset(C64(-PAN_RATE * dt, 0.));
         }
-        if is_key_down(KeyCode::Right) {
+        if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
             view.scaled_offset(C64(PAN_RATE * dt, 0.));
         }
 
@@ -95,8 +108,19 @@ async fn main() {
                 }
             }
         }
-
-        draw_fps();
+        
+        // draw display elements
+        if render_overlay {
+            let text_elements = vec![
+                format!("FPS: {}", get_fps()),
+                format!("Fractal: {}", fractal_type),
+                format!("View: {}", view),
+                format!("C: {}", view.screen_to_complex(&mouse_pos).unwrap_or(C64::new()))
+            ];
+            for (i, element) in text_elements.iter().enumerate() {
+                draw_text(element, 0., 20. + i as f32 * 20., 25., WHITE);
+            }
+        }
         next_frame().await;
     }
 }

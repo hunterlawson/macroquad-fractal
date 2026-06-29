@@ -9,13 +9,14 @@
 
 ## Controls
 
-- Arrow keys: pan camera
-- Z/X: zoom in/out
-- Spacebar: reset view
-- R: swap between mandelbrot and julia rendering
+- `WASD / Arrow keys`: pan camera
+- `Mousewheel / Z / X`: zoom in/out
+- `Spacebar`: reset view
+- `R`: swap between mandelbrot and julia rendering
+- `O`: enable/disable rendering orbits
 
 ## TODO
 
-- [ ] Unlimited zoom (perterbation theory)
+- [ ] Unlimited zoom
 - [ ] improved coloring
 - [ ] shading

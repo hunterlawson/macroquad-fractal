@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use line_clipping::{LineSegment, Point, Window, cohen_sutherland::clip_line};
 use macroquad::{
     material::Material,
@@ -121,10 +123,10 @@ impl ComplexView {
 
     /// Return whether or not the given screen-space pixel coordinate is inside this view
     pub fn in_view(&self, pos: &Vec2) -> bool {
-        (pos.x > self.screen_pixel_position.x
-            && pos.x < self.screen_pixel_position.x + self.pixel_dimensions.x)
-            && (pos.y > self.screen_pixel_position.y
-                && pos.y < self.screen_pixel_position.y + self.pixel_dimensions.y)
+        (pos.x >= self.screen_pixel_position.x
+            && pos.x <= self.screen_pixel_position.x + self.pixel_dimensions.x)
+            && (pos.y >= self.screen_pixel_position.y
+                && pos.y <= self.screen_pixel_position.y + self.pixel_dimensions.y)
     }
 
     /// Clip a line to fall inside the view
@@ -179,5 +181,15 @@ impl ComplexView {
         pix_y += self.screen_pixel_position.y;
 
         vec2(pix_x, pix_y)
+    }
+}
+
+impl Display for ComplexView {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "re ~ [{:.8}, {:.8}],  im ~ [{:.8}i, {:.8}i]",
+            self.r_region_z.0, self.r_region_z.1, self.c_region_z.0, self.c_region_z.1
+        )
     }
 }

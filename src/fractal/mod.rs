@@ -10,7 +10,9 @@ use crate::complex::C64;
 
 #[derive(EnumIter, Display, PartialEq, Clone, Copy, EnumString)]
 pub enum FractalType {
+    #[strum(serialize = "Mandelbrot Set")]
     Mandelbrot,
+    #[strum(serialize = "Julia Set")]
     Julia,
 }
 
