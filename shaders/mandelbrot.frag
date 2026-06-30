@@ -53,7 +53,13 @@ void main() {
 
     for(int s = 0; s < 4; s++) {
         vec2 c = c_for(offsets[s]);
-        val += fractal_value(c);
+        // main cardioid and period-2 bulb check
+        float q = pow(c.x - 0.25, 2.) + c.y * c.y;
+        if((q * (q + (c.x - 0.25)) <= 0.25 * c.y * c.y) && (pow(c.x + 1., 2.) + c.y * c.y <= 0.0625)) {
+            val += 0.;
+        } else {
+            val += fractal_value(c);
+        }
     }
 
     val /= 4.;

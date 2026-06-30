@@ -14,6 +14,7 @@ categories = ["graphics", "visualization"]
 line-clipping = "0.3.7"
 macroquad = "0.4.15"
 rfd = "0.17.2"
+rug = "1.30.0"
 strum = { version = "0.28.0", features = ["derive"] }
 
 [profile.release]
