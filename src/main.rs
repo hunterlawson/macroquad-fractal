@@ -5,7 +5,10 @@ mod renderer;
 use macroquad::prelude::*;
 use rug::Complex;
 
-use crate::{fractal::FractalType, renderer::{renderer::Renderer, view::View}};
+use crate::{
+    fractal::FractalType,
+    renderer::{renderer::Renderer, view::View},
+};
 
 const ZOOM_RATE: f64 = 1.5; // # of doubles per second
 const PAN_RATE: f64 = 500.; // pixels / second
@@ -39,11 +42,12 @@ async fn main() {
         Err(e) => {
             error!("{}", e);
             return;
-        },
+        }
     };
 
-    let orbit = renderer.fractal().orbit(Complex::with_val(PRECISION, (-0.5, 0.5)));
-    debug!("{:?}", orbit);
+    let orbit = renderer
+        .fractal()
+        .orbit(Complex::with_val(PRECISION, (-0.5, 0.5)));
 
     loop {
         let dt = get_frame_time() as f64;
@@ -64,8 +68,12 @@ async fn main() {
         }
         // Zoom with mouse scroll wheel
         if mouse_wheel_y != 0. {
-            let factor = 2f64.powf(mouse_wheel_y as f64 * dt / 1.5);
+            let factor = 2f64.powf(mouse_wheel_y as f64 * dt / ZOOM_RATE);
             view.zoom(factor);
+        }
+        // Reset view
+        if is_key_pressed(KeyCode::Space) {
+            view.reset();
         }
 
         // Render the fractal
@@ -73,21 +81,18 @@ async fn main() {
 
         // Draw overlay elements
         let text_elements = vec![
-                format!("FPS: {}", get_fps()),
-                format!("Fractal: {}", fractal),
-                format!("Max iterations: {}", renderer.fractal().max_iter()),
-                format!("View: {}", view),
-                format!(
-                    "C: {}",
-                    view.c()
-                ),
-                // format!("Input C: {}", fractal_input),
-                // format!("View orbits: {}", render_orbits),
-                // format!("Cached render: {}", cached_render)
-            ];
-            for (i, element) in text_elements.iter().enumerate() {
-                draw_text(element, 0., 20. + i as f32 * 20., 25., WHITE);
-            }
+            format!("FPS: {}", get_fps()),
+            format!("Fractal: {}", fractal),
+            format!("Max iterations: {}", renderer.fractal().max_iter()),
+            format!("View: {{{}}}", view),
+            format!("C: {}", view.c()),
+            // format!("Input C: {}", fractal_input),
+            // format!("View orbits: {}", render_orbits),
+            // format!("Cached render: {}", cached_render)
+        ];
+        for (i, element) in text_elements.iter().enumerate() {
+            draw_text(element, 0., 20. + i as f32 * 20., 25., WHITE);
+        }
 
         next_frame().await;
     }

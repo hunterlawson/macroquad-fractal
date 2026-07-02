@@ -3,9 +3,17 @@ use std::fmt::Display;
 use macroquad::{
     logging::debug, material::Material, math::Vec2, miniquad::{UniformDesc, UniformType},
 };
-use rug::{Complex, ops::CompleteRound};
+use rug::{Assign, Complex, ops::CompleteRound};
 
-use crate::PRECISION;
+use crate::{PRECISION, renderer::view};
+
+#[derive(Debug)]
+struct ViewParams {
+    pos: Vec2,
+    dim: Vec2,
+    c: Complex,
+    re_range: Vec2,
+}
 
 /// View of the complex plane mapped onto the screen
 #[derive(Debug)]
@@ -22,20 +30,36 @@ pub struct View {
     viewport_width: f64,
     /// Scale of the view - how tall is it (im axis)
     viewport_height: f64,
+    /// Params used to initialize this view
+    initial_params: ViewParams,
 }
 
 impl View {
     pub fn new(pos: Vec2, dim: Vec2, c: Complex, re_range: Vec2) -> Self {
-        let viewport_width = (re_range.y - re_range.x) as f64;
-        let i_ratio = (dim.y / dim.x) as f64;
+        let initial_params = ViewParams {
+            pos,
+            dim,
+            c: c.clone(),
+            re_range,
+        };
+        let viewport = Self::get_viewport_width_height(&initial_params);
+
         Self {
             pos,
             dim,
             c,
             zoom: 1.,
-            viewport_width,
-            viewport_height: viewport_width * i_ratio,
+            viewport_width: viewport.0,
+            viewport_height: viewport.1,
+            initial_params: initial_params,
         }
+    }
+
+    fn get_viewport_width_height(params: &ViewParams) -> (f64, f64) {
+        let width = (params.re_range.y - params.re_range.x) as f64;
+        let i_ratio = (params.dim.y / params.dim.x) as f64;
+
+        (width, width * i_ratio)
     }
 
     // pub fn uniform_descs(&self) -> Vec<UniformDesc> {
@@ -109,10 +133,19 @@ impl View {
         
         self.c += Complex::with_val(PRECISION, pixels);
     }
+
+    /// Reset the view to the values used at initialization
+    pub fn reset(&mut self) {
+        self.zoom = 1.;
+        self.c.assign(&self.initial_params.c);
+        let view = Self::get_viewport_width_height(&self.initial_params);
+        self.viewport_width = view.0;
+        self.viewport_height = view.1;
+    }
 }
 
 impl Display for View {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Dimensions: {}, Zoom: {}", self.dim, self.zoom)
+        write!(f, "pos: {}, dim: {}, zoom: {}", self.pos, self.dim, self.zoom)
     }
 }
