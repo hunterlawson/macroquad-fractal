@@ -37,7 +37,7 @@ async fn main() {
 
     // Renderer
     let fractal = FractalType::Mandelbrot;
-    let renderer = match Renderer::new(fractal.make()) {
+    let mut renderer = match Renderer::new(fractal.make()) {
         Ok(r) => r,
         Err(e) => {
             error!("{}", e);
@@ -45,9 +45,9 @@ async fn main() {
         }
     };
 
-    let orbit = renderer
-        .fractal()
-        .orbit(Complex::with_val(PRECISION, (-0.5, 0.5)));
+    // let orbit = renderer
+    //     .fractal()
+    //     .orbit(Complex::with_val(PRECISION, (-0.5, 0.5)));
 
     loop {
         let dt = get_frame_time() as f64;
@@ -76,8 +76,9 @@ async fn main() {
             view.reset();
         }
 
-        // Render the fractal
-        renderer.render(&view);
+        // Render and draw the fractal
+        let cached_render = !renderer.cached_render(&view);
+        renderer.draw();
 
         // Draw overlay elements
         let text_elements = vec![
@@ -88,7 +89,7 @@ async fn main() {
             format!("C: {}", view.c()),
             // format!("Input C: {}", fractal_input),
             // format!("View orbits: {}", render_orbits),
-            // format!("Cached render: {}", cached_render)
+            format!("Cached render: {}", cached_render)
         ];
         for (i, element) in text_elements.iter().enumerate() {
             draw_text(element, 0., 20. + i as f32 * 20., 25., WHITE);

@@ -7,7 +7,7 @@ use rug::{Assign, Complex, ops::CompleteRound};
 
 use crate::{PRECISION, renderer::view};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 struct ViewParams {
     pos: Vec2,
     dim: Vec2,
@@ -16,7 +16,7 @@ struct ViewParams {
 }
 
 /// View of the complex plane mapped onto the screen
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct View {
     /// Position of the view on the screen (in pixels)
     pos: Vec2,
