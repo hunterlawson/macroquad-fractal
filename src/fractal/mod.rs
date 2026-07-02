@@ -1,9 +1,8 @@
-mod julia;
 mod mandelbrot;
 
-pub use julia::*;
-use macroquad::{material::Material, math::vec2, miniquad::UniformDesc};
+use macroquad::{material::Material, math::Vec2, miniquad::UniformDesc};
 pub use mandelbrot::*;
+use rug::Complex;
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
 use crate::{DEFAULT_MAX_ITER, complex::C64};
@@ -12,8 +11,6 @@ use crate::{DEFAULT_MAX_ITER, complex::C64};
 pub enum FractalType {
     #[strum(serialize = "Mandelbrot Set")]
     Mandelbrot,
-    #[strum(serialize = "Julia Set")]
-    Julia,
 }
 
 impl FractalType {
@@ -21,10 +18,6 @@ impl FractalType {
         match *self {
             FractalType::Mandelbrot => Box::new(Mandelbrot {
                 max_iter: DEFAULT_MAX_ITER,
-            }),
-            FractalType::Julia => Box::new(Julia {
-                max_iter: DEFAULT_MAX_ITER,
-                c: vec2(-0.5125, 0.5213), // Nice looking default starting point
             }),
         }
     }
@@ -50,7 +43,7 @@ pub trait Fractal {
     /// this will not work
     fn set_uniforms(&self, material: &Material);
     /// Return the orbit for the given complex point
-    fn orbit(&self, point: C64) -> Vec<C64>;
+    fn orbit(&self, point: Complex) -> Vec<Vec2>;
     /// Input the given complex value into the fractal
     ///
     /// Some fractals use an input/starting value (like the Julia set)
