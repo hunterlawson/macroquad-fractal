@@ -7,27 +7,34 @@ use rug::{Assign, Complex, Float};
 
 use crate::{PRECISION, fractal::Fractal};
 
-const MANDELBROT_FRAGMENT_SHADER: &'static str = include_str!("../../shaders/mandelbrot.frag");
-pub struct Mandelbrot {
+const JULIA_FRAGMENT_SHADER: &'static str = include_str!("../../shaders/julia.frag");
+
+pub struct Julia {
     pub max_iter: u32,
+    /// Starting c value
+    pub c: Complex,
 }
 
-impl Fractal for Mandelbrot {
+impl Fractal for Julia {
     fn fragment_shader(&self) -> &'static str {
-        MANDELBROT_FRAGMENT_SHADER
+        JULIA_FRAGMENT_SHADER
     }
 
     fn uniform_descs(&self) -> Vec<UniformDesc> {
-        vec![UniformDesc::new("max_iter", UniformType::Int1)]
+        vec![
+            UniformDesc::new("max_iter", UniformType::Int1),
+            UniformDesc::new("c", UniformType::Float2),
+        ]
     }
 
     fn set_uniforms(&self, material: &Material) {
+        let c_f32 = (self.c.real().to_f32(), self.c.imag().to_f32());
         material.set_uniform("max_iter", self.max_iter as i32);
+        material.set_uniform("c", c_f32);
     }
 
     fn orbit(&self, point: &Complex) -> Vec<Vec2> {
         let mut output = vec![];
-        let c = point.clone();
         let mut z = point.clone();
         let mut norm_sqr = Float::with_val(PRECISION, 0.);
 
@@ -37,7 +44,7 @@ impl Fractal for Mandelbrot {
             output.push(vec2(z.real().to_f32(), z.imag().to_f32()));
 
             z.square_mut();
-            z += &c;
+            z += &self.c;
 
             norm_sqr.assign(z.norm_ref());
 
@@ -49,6 +56,10 @@ impl Fractal for Mandelbrot {
         output
     }
 
+    fn input_parameter(&mut self, c: &Complex) {
+        self.c = c.clone();
+    }
+
     fn set_max_iter(&mut self, max_iter: u32) {
         self.max_iter = max_iter;
     }
@@ -58,6 +69,6 @@ impl Fractal for Mandelbrot {
     }
 
     fn fractal_type(&self) -> super::FractalType {
-        super::FractalType::Mandelbrot
+        super::FractalType::Julia
     }
 }

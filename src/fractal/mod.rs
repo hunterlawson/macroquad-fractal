@@ -1,23 +1,29 @@
+mod julia;
 mod mandelbrot;
 
 use macroquad::{material::Material, math::Vec2, miniquad::UniformDesc};
-pub use mandelbrot::*;
 use rug::Complex;
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
-use crate::{DEFAULT_MAX_ITER, complex::C64};
+use crate::{DEFAULT_MAX_ITER, PRECISION};
 
 #[derive(EnumIter, Display, PartialEq, Clone, Copy, EnumString)]
 pub enum FractalType {
     #[strum(serialize = "Mandelbrot Set")]
     Mandelbrot,
+    #[strum(serialize = "Julia Set")]
+    Julia,
 }
 
 impl FractalType {
     pub fn make(&self) -> Box<dyn Fractal> {
         match *self {
-            FractalType::Mandelbrot => Box::new(Mandelbrot {
+            FractalType::Mandelbrot => Box::new(mandelbrot::Mandelbrot {
                 max_iter: DEFAULT_MAX_ITER,
+            }),
+            FractalType::Julia => Box::new(julia::Julia {
+                max_iter: DEFAULT_MAX_ITER,
+                c: Complex::with_val(PRECISION, (-0.7269, 0.1889)),
             }),
         }
     }
@@ -43,13 +49,15 @@ pub trait Fractal {
     /// this will not work
     fn set_uniforms(&self, material: &Material);
     /// Return the orbit for the given complex point
-    fn orbit(&self, point: Complex) -> Vec<Vec2>;
+    fn orbit(&self, point: &Complex) -> Vec<Vec2>;
     /// Input the given complex value into the fractal
     ///
     /// Some fractals use an input/starting value (like the Julia set)
-    fn input_parameter(&mut self, _point: C64) {}
+    fn input_parameter(&mut self, _point: &Complex) {}
     /// Set the maximum iteration value (for escape time fractals)
     fn set_max_iter(&mut self, max_iter: u32);
     /// Get the maximum iteration value (for escape time fractals)
     fn max_iter(&self) -> u32;
+    /// Get the fractal type value for this fractal
+    fn fractal_type(&self) -> FractalType;
 }

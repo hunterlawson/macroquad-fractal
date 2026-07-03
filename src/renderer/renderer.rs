@@ -1,6 +1,15 @@
 use macroquad::{
-    Error, camera::{Camera2D, set_camera, set_default_camera}, logging::debug, material::{Material, MaterialParams, gl_use_default_material, gl_use_material, load_material}, math::Rect, miniquad::ShaderSource, shapes::draw_rectangle, texture::{DrawTextureParams, FilterMode, RenderTarget, draw_texture_ex, render_target}, window::clear_background,
+    Error,
+    camera::{Camera2D, set_camera, set_default_camera},
+    logging::debug,
+    material::{Material, MaterialParams, gl_use_default_material, gl_use_material, load_material},
+    math::{Rect, Vec2},
+    miniquad::ShaderSource,
+    shapes::{draw_line, draw_rectangle},
+    texture::{DrawTextureParams, FilterMode, RenderTarget, draw_texture_ex, render_target},
+    window::clear_background,
 };
+use rug::Complex;
 
 use crate::{fractal::Fractal, renderer::view::View};
 
@@ -19,7 +28,7 @@ pub struct Renderer {
 impl Renderer {
     pub fn new(fractal: Box<dyn Fractal>) -> Result<Self, Error> {
         Ok(Self {
-            material: Self::build_fractal_material(fractal.as_ref())?,
+            material: Self::load_fractal_material(fractal.as_ref())?,
             fractal,
             target: None,
             cached_view: None,
@@ -27,11 +36,10 @@ impl Renderer {
         })
     }
 
-    fn build_fractal_material(fractal: &dyn Fractal) -> Result<Material, Error> {
+    fn load_fractal_material(fractal: &dyn Fractal) -> Result<Material, Error> {
         let mut uniforms = View::uniform_descs();
         uniforms.extend(fractal.uniform_descs());
 
-        debug!("Creating fractal material");
         load_material(
             ShaderSource::Glsl {
                 vertex: VERT_SHADER,
@@ -46,6 +54,17 @@ impl Renderer {
 
     pub fn fractal(&self) -> &dyn Fractal {
         self.fractal.as_ref()
+    }
+
+    pub fn set_fractal(&mut self, fractal: Box<dyn Fractal>) {
+        self.fractal = fractal;
+        self.dirty_render = true;
+        self.material = Self::load_fractal_material(self.fractal.as_ref()).unwrap();
+    }
+
+    pub fn set_fractal_input_parameter(&mut self, c: &Complex) {
+        self.fractal.input_parameter(c);
+        self.dirty_render = true;
     }
 
     /// Forced render of the fractal to the given view
@@ -136,5 +155,23 @@ impl Renderer {
                 ..Default::default()
             },
         );
+    }
+
+    /// Draw the orbit of the given screen point p
+    pub fn draw_orbit(&self, view: &View, p: &Vec2) {
+        if let Some(c) = view.screen_to_view(&p) {
+            // map points in the orbit to the screen
+            let points: Vec<Vec2> = self
+                .fractal
+                .orbit(&c)
+                .iter()
+                .map(|c| view.view_to_screen(&c))
+                .collect();
+            for p in points.windows(2) {
+                if let Some(l) = view.clip_line((p[0], p[1])) {
+                    draw_line(l.0.x, l.0.y, l.1.x, l.1.y, 2., macroquad::color::GREEN);
+                }
+            }
+        }
     }
 }
