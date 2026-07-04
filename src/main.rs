@@ -1,6 +1,8 @@
 mod fractal;
 mod renderer;
 
+use std::env;
+
 use macroquad::prelude::*;
 use rug::Complex;
 
@@ -11,7 +13,7 @@ use crate::{
 
 const ZOOM_RATE: f64 = 1.5; // # of doubles per second
 const PAN_RATE: f64 = 500.; // pixels / second
-const DEFAULT_MAX_ITER: u32 = 256;
+const DEFAULT_MAX_ITER: u32 = 200;
 const ITER_DELTA: u32 = 10;
 const PRECISION: u32 = 53;
 
@@ -46,12 +48,15 @@ async fn main() {
 
     let mut draw_overlay = true;
     let mut controls_elements = vec![
-        "R: Swap between Mandelbrot and Julia sets",
-        "Spacebar: Reset the view",
-        "I: Enable/disable inputting 'C' into the fractal",
-        "O: Enable/disable drawing the orbit of 'C'",
-        "T: Enable/disable the overlay",
-        "Q: Save a screenshot",
+        "WASD / Arrow keys: pan camera",
+        "Mousewheel / Z / X: zoom in/out",
+        "Spacebar: reset view",
+        "Y / H: increase or decrease max iteration count",
+        "R: swap between Mandelbrot and Julia rendering",
+        "I: enable/disable inputting the value of 'C' into the fractal",
+        "O: enable/disable rendering orbits",
+        "T: enable/disable overlay",
+        "Q: save screenshot",
     ];
     controls_elements.reverse();
 
@@ -68,21 +73,21 @@ async fn main() {
 
         // Pan
         if is_key_down(KeyCode::W) || is_key_down(KeyCode::Up) {
-            view.scaled_offset((0., PAN_RATE * dt));
+            view.pixel_offset((0., PAN_RATE * dt));
         }
         if is_key_down(KeyCode::S) || is_key_down(KeyCode::Down) {
-            view.scaled_offset((0., -PAN_RATE * dt));
+            view.pixel_offset((0., -PAN_RATE * dt));
         }
         if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
-            view.scaled_offset((-PAN_RATE * dt, 0.));
+            view.pixel_offset((-PAN_RATE * dt, 0.));
         }
         if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
-            view.scaled_offset((PAN_RATE * dt, 0.));
+            view.pixel_offset((PAN_RATE * dt, 0.));
         }
         // Zoom with mouse scroll wheel
         if mouse_wheel_y != 0. {
             let factor = 2f64.powf(mouse_wheel_y as f64 * dt / ZOOM_RATE);
-            view.zoom(factor);
+            view.zoom_focus(factor, mouse_pos);
         }
         // Zoom with keys
         if is_key_down(KeyCode::Z) {
@@ -123,6 +128,16 @@ async fn main() {
         {
             renderer.set_fractal_input_parameter(&point);
         }
+        if is_key_pressed(KeyCode::Y) {
+            let iter = renderer.fractal().max_iter();
+            renderer.fractal_mut().set_max_iter(iter + ITER_DELTA);
+            renderer.render(&view);
+        }
+        if is_key_pressed(KeyCode::H) {
+            let iter = renderer.fractal().max_iter();
+            renderer.fractal_mut().set_max_iter(iter - ITER_DELTA);
+            renderer.render(&view);
+        }
 
         // Render and draw the fractal
         let cached_render = !renderer.cached_render(&view);
@@ -152,6 +167,20 @@ async fn main() {
             // Controls
             for (i, element) in controls_elements.iter().enumerate() {
                 draw_text(element, 0., h - 10. - i as f32 * 20., 25., WHITE);
+            }
+        }
+
+        // Save screenshot
+        if is_key_pressed(KeyCode::Q) {
+            let image = get_screen_data();
+            let file_path = rfd::FileDialog::new()
+                .set_title("Save Screenshot As")
+                .set_file_name("screenshot.png")
+                .set_directory(env::current_dir().unwrap())
+                .save_file();
+
+            if let Some(path) = file_path {
+                image.export_png(path.to_str().unwrap());
             }
         }
 

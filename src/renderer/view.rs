@@ -2,14 +2,13 @@ use std::fmt::Display;
 
 use line_clipping::{LineSegment, Point, Window, cohen_sutherland::clip_line};
 use macroquad::{
-    logging::debug,
     material::Material,
     math::{Vec2, vec2},
     miniquad::{UniformDesc, UniformType},
 };
 use rug::{Assign, Complex, ops::CompleteRound};
 
-use crate::{PRECISION, renderer::view};
+use crate::PRECISION;
 
 #[derive(Debug, PartialEq, Clone)]
 struct ViewParams {
@@ -212,7 +211,7 @@ impl View {
     /// Apply an offset (in pixels)
     ///
     /// Uses arbitrary precision to keep C precise
-    pub fn scaled_offset(&mut self, pixels: (f64, f64)) {
+    pub fn pixel_offset(&mut self, pixels: (f64, f64)) {
         let mut pixels = pixels;
         let width_scale = self.viewport_width / (self.dim.x as f64);
         let height_scale = self.viewport_height / (self.dim.y as f64);
@@ -220,6 +219,22 @@ impl View {
         pixels.1 *= height_scale;
 
         self.c += Complex::with_val(PRECISION, pixels);
+    }
+
+    /// Zoom with a focus pixel point that stays in the same spot on the screen
+    pub fn zoom_focus(&mut self, factor: f64, focus: Vec2) {
+        let focus_c_start = self.screen_to_view(&focus);
+        self.zoom(factor);
+        let focus_c_end = self.screen_to_view(&focus);
+
+        match focus_c_start {
+            Some(c_start) => {
+                let c_end = focus_c_end.expect("Guaranteed to exist of c_start exists");
+                let offset = c_start - c_end;
+                self.c += offset;
+            }
+            None => (),
+        }
     }
 
     /// Reset the view to the values used at initialization

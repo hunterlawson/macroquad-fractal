@@ -1,7 +1,6 @@
 use macroquad::{
     Error,
     camera::{Camera2D, set_camera, set_default_camera},
-    logging::debug,
     material::{Material, MaterialParams, gl_use_default_material, gl_use_material, load_material},
     math::{Rect, Vec2},
     miniquad::ShaderSource,
@@ -52,8 +51,14 @@ impl Renderer {
         )
     }
 
+    /// Get a reference to the underlying fractal
     pub fn fractal(&self) -> &dyn Fractal {
         self.fractal.as_ref()
+    }
+
+    /// Get a mutable reference to the underlying fractal
+    pub fn fractal_mut(&mut self) -> &mut dyn Fractal {
+        self.fractal.as_mut()
     }
 
     pub fn set_fractal(&mut self, fractal: Box<dyn Fractal>) {

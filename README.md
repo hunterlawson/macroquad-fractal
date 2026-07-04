@@ -23,10 +23,10 @@ cargo run --release
 
 ## Controls
 
-- `WASD`: pan camera
+- `WASD / Arrow keys`: pan camera
 - `Mousewheel / Z / X`: zoom in/out
 - `Spacebar`: reset view
-- `Up / Down`: increase or decrease max iteration count
+- `Y / H`: increase or decrease max iteration count
 - `R`: swap between Mandelbrot and Julia rendering
 - `I`: enable/disable inputting the value of 'C' into the fractal (useful for Julia set rendering)
 - `O`: enable/disable rendering orbits
