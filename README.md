@@ -1,6 +1,6 @@
 # Fractal Renderer Using Rust + Macroquad
 
-Real-time GPU-accelerated fractal renderer built in Rust using Macroquad. Supports Mandelbrot and Julia set rendering implemented in GLSL fragment shaders.
+Real-time GPU-accelerated fractal renderer built in Rust using Macroquad. Supports Mandelbrot, Julia, and Burning Ship fractal rendering implemented in GLSL fragment shaders.
 
 | Mandelbrot Set | Julia Set | Orbit Rendering |
 | -------------- | --------- | --------------- |
