@@ -8,7 +8,8 @@ Real-time GPU-accelerated fractal renderer built in Rust using Macroquad. Suppor
 
 ## Features
 
-- Julia and Mandelbrot set rendering entirely on the GPU using custom fragment shaders
+- Fractal rendering entirely on the GPU using custom fragment shaders
+- Supports Mandelbrot, Julia, Burning Ship fractals
 - Image smoothing using GPU-accelerated 4x supersampling
 - Smooth panning and zooming using a custom screen-to-complex plane view manager
 - Interactive orbit visualization

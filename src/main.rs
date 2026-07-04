@@ -52,7 +52,7 @@ async fn main() {
         "Mousewheel / Z / X: zoom in/out",
         "Spacebar: reset view",
         "Y / H: increase or decrease max iteration count",
-        "R: swap between Mandelbrot and Julia rendering",
+        "R: swap current fractal render",
         "I: enable/disable inputting the value of 'C' into the fractal",
         "O: enable/disable rendering orbits",
         "T: enable/disable overlay",
@@ -133,7 +133,7 @@ async fn main() {
             renderer.fractal_mut().set_max_iter(iter + ITER_DELTA);
             renderer.render(&view);
         }
-        if is_key_pressed(KeyCode::H) {
+        if is_key_pressed(KeyCode::H) && renderer.fractal().max_iter() >= ITER_DELTA {
             let iter = renderer.fractal().max_iter();
             renderer.fractal_mut().set_max_iter(iter - ITER_DELTA);
             renderer.render(&view);

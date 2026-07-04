@@ -1,5 +1,6 @@
 mod julia;
 mod mandelbrot;
+mod burning_ship;
 
 use macroquad::{material::Material, math::Vec2, miniquad::UniformDesc};
 use rug::Complex;
@@ -13,6 +14,8 @@ pub enum FractalType {
     Mandelbrot,
     #[strum(serialize = "Julia Set")]
     Julia,
+    #[strum(serialize = "Burning Ship Fractal")]
+    BurningShip,
 }
 
 impl FractalType {
@@ -25,7 +28,10 @@ impl FractalType {
                 max_iter: DEFAULT_MAX_ITER,
                 c: Complex::with_val(PRECISION, (-0.7269, 0.1889)),
             }),
-        }
+            FractalType::BurningShip => Box::new(burning_ship::BurningShip {
+                max_iter: DEFAULT_MAX_ITER,
+            }),
+                    }
     }
 
     pub fn next(self) -> Self {
