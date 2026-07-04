@@ -4,7 +4,7 @@ Real-time GPU-accelerated fractal renderer built in Rust using Macroquad. Suppor
 
 | Mandelbrot Set | Julia Set | Orbit Rendering |
 | -------------- | --------- | --------------- |
-| ![mandelbrot](screenshots/screenshot_1.png) | ![julia](screenshots/screenshot_3.png) | ![orbits](screenshots/screenshot_2.png) |
+| ![mandelbrot](screenshots/screenshot_1.png) | ![julia](screenshots/screenshot_2.png) | ![orbits](screenshots/screenshot_3.png) |
 
 ## Features
 
