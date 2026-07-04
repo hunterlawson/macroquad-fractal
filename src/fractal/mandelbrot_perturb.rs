@@ -7,34 +7,45 @@ use rug::{Assign, Complex, Float};
 
 use crate::{PRECISION, fractal::Fractal};
 
-const JULIA_FRAGMENT_SHADER: &'static str = include_str!("../../shaders/julia.frag");
+const MANDELBROT_PERTURB_FRAGMENT_SHADER: &'static str =
+    include_str!("../../shaders/mandelbrot_perturb.frag");
 
-pub struct Julia {
+pub struct MandelbrotPerturb {
     pub max_iter: u32,
-    /// Starting c value
-    pub c: Complex,
 }
 
-impl Fractal for Julia {
+impl Fractal for MandelbrotPerturb {
     fn fragment_shader(&self) -> String {
-        JULIA_FRAGMENT_SHADER.into()
+        MANDELBROT_PERTURB_FRAGMENT_SHADER
+            .replace("$size$", &self.max_iter.to_string())
+            .to_string()
     }
 
-    fn uniform_descs(&self) -> Vec<UniformDesc> {
+    fn uniform_descs(&self) -> Vec<macroquad::prelude::UniformDesc> {
         vec![
             UniformDesc::new("max_iter", UniformType::Int1),
-            UniformDesc::new("c", UniformType::Float2),
+            UniformDesc::array(
+                UniformDesc::new("reference_orbit", UniformType::Float2),
+                self.max_iter as usize,
+            ),
+            UniformDesc::new("reference_orbit_length", UniformType::Int1),
         ]
     }
 
-    fn set_uniforms(&self, material: &Material, _: &Complex) {
-        let c_f32 = (self.c.real().to_f32(), self.c.imag().to_f32());
+    fn set_uniforms(&self, material: &Material, c: &Complex) {
         material.set_uniform("max_iter", self.max_iter as i32);
-        material.set_uniform("c", c_f32);
+
+        let mut orbit = self.orbit(c);
+        let len = orbit.len();
+        orbit.resize(self.max_iter as usize, Vec2::new(0., 0.));
+
+        material.set_uniform_array("reference_orbit", orbit.as_slice());
+        material.set_uniform("reference_orbit_length", len as i32);
     }
 
     fn orbit(&self, point: &Complex) -> Vec<Vec2> {
         let mut output = vec![];
+        let c = point.clone();
         let mut z = point.clone();
         let mut norm_sqr = Float::with_val(PRECISION, 0.);
 
@@ -44,7 +55,7 @@ impl Fractal for Julia {
             output.push(vec2(z.real().to_f32(), z.imag().to_f32()));
 
             z.square_mut();
-            z += &self.c;
+            z += &c;
 
             norm_sqr.assign(z.norm_ref());
 
@@ -56,10 +67,6 @@ impl Fractal for Julia {
         output
     }
 
-    fn input_parameter(&mut self, c: &Complex) {
-        self.c = c.clone();
-    }
-
     fn set_max_iter(&mut self, max_iter: u32) {
         self.max_iter = max_iter;
     }
@@ -69,6 +76,6 @@ impl Fractal for Julia {
     }
 
     fn fractal_type(&self) -> super::FractalType {
-        super::FractalType::Julia
+        super::FractalType::MandelbrotPerturb
     }
 }

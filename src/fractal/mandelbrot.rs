@@ -13,15 +13,15 @@ pub struct Mandelbrot {
 }
 
 impl Fractal for Mandelbrot {
-    fn fragment_shader(&self) -> &'static str {
-        MANDELBROT_FRAGMENT_SHADER
+    fn fragment_shader(&self) -> String {
+        MANDELBROT_FRAGMENT_SHADER.into()
     }
 
     fn uniform_descs(&self) -> Vec<UniformDesc> {
         vec![UniformDesc::new("max_iter", UniformType::Int1)]
     }
 
-    fn set_uniforms(&self, material: &Material) {
+    fn set_uniforms(&self, material: &Material, _: &Complex) {
         material.set_uniform("max_iter", self.max_iter as i32);
     }
 

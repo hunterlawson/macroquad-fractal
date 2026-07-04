@@ -42,7 +42,7 @@ impl Renderer {
         load_material(
             ShaderSource::Glsl {
                 vertex: VERT_SHADER,
-                fragment: fractal.fragment_shader(),
+                fragment: &fractal.fragment_shader(),
             },
             MaterialParams {
                 uniforms,
@@ -64,6 +64,10 @@ impl Renderer {
     pub fn set_fractal(&mut self, fractal: Box<dyn Fractal>) {
         self.fractal = fractal;
         self.dirty_render = true;
+        self.reload_material();
+    }
+
+    pub fn reload_material(&mut self) {
         self.material = Self::load_fractal_material(self.fractal.as_ref()).unwrap();
     }
 
@@ -108,7 +112,7 @@ impl Renderer {
         gl_use_material(&self.material);
 
         // Set uniforms per-fractal, some fractals will have different uniforms
-        self.fractal.set_uniforms(&self.material);
+        self.fractal.set_uniforms(&self.material, view.c());
 
         // Set universal uniforms used by all fractals
         view.set_uniforms(&self.material);

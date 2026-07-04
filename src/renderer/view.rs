@@ -8,7 +8,7 @@ use macroquad::{
 };
 use rug::{Assign, Complex, ops::CompleteRound};
 
-use crate::PRECISION;
+use crate::{PRECISION};
 
 #[derive(Debug, PartialEq, Clone)]
 struct ViewParams {
@@ -65,21 +65,6 @@ impl View {
         (width, width * i_ratio)
     }
 
-    // pub fn uniform_descs(&self) -> Vec<UniformDesc> {
-    //     vec![
-    //         UniformDesc::new("display_dimensions", UniformType::Float2),
-    //         UniformDesc::new("viewport_dimensions", UniformType::Float2),
-    //     ]
-    // }
-
-    // pub fn set_uniforms(&self, material: &Material) {
-    //     material.set_uniform("display_dimensions", self.dim);
-    //     material.set_uniform(
-    //         "viewport_dimensions",
-    //         (self.viewport_width, self.viewport_height),
-    //     );
-    // }
-
     pub fn uniform_descs() -> Vec<UniformDesc> {
         vec![
             UniformDesc::new("base_re", UniformType::Float1),
@@ -87,6 +72,9 @@ impl View {
             UniformDesc::new("base_im", UniformType::Float1),
             UniformDesc::new("scale_im", UniformType::Float1),
             UniformDesc::new("pixel_dimensions", UniformType::Float2),
+            // perturbation
+            UniformDesc::new("display_dimensions", UniformType::Float2),
+            UniformDesc::new("viewport_dimensions", UniformType::Float2),
         ]
     }
 
@@ -98,6 +86,12 @@ impl View {
         material.set_uniform("base_im", base_im);
         material.set_uniform("scale_im", (-self.viewport_height) as f32);
         material.set_uniform("pixel_dimensions", self.dim);
+        // perturbation
+        material.set_uniform("display_dimensions", self.dim);
+        material.set_uniform(
+            "viewport_dimensions",
+            (self.viewport_width as f32, self.viewport_height as f32),
+        );
     }
 
     /// Get the base real value as f64

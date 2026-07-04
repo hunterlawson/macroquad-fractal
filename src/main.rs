@@ -12,7 +12,7 @@ use crate::{
 };
 
 const ZOOM_RATE: f64 = 1.5; // # of doubles per second
-const PAN_RATE: f64 = 500.; // pixels / second
+const PAN_RATE: f64 = 1000000.; // pixels / second
 const DEFAULT_MAX_ITER: u32 = 200;
 const ITER_DELTA: u32 = 10;
 const PRECISION: u32 = 53;
@@ -37,7 +37,7 @@ async fn main() {
     let mut view = View::new(vec2(0., 0.), vec2(w, h), start_c, vec2(-2., 2.));
 
     // Renderer
-    let mut fractal = FractalType::Mandelbrot;
+    let mut fractal = FractalType::MandelbrotPerturb;
     let mut renderer = match Renderer::new(fractal.make()) {
         Ok(r) => r,
         Err(e) => {
@@ -132,11 +132,13 @@ async fn main() {
             let iter = renderer.fractal().max_iter();
             renderer.fractal_mut().set_max_iter(iter + ITER_DELTA);
             renderer.render(&view);
+            renderer.reload_material();
         }
         if is_key_pressed(KeyCode::H) {
             let iter = renderer.fractal().max_iter();
             renderer.fractal_mut().set_max_iter(iter - ITER_DELTA);
             renderer.render(&view);
+            renderer.reload_material();
         }
 
         // Render and draw the fractal

@@ -1,5 +1,6 @@
 mod julia;
 mod mandelbrot;
+mod mandelbrot_perturb;
 
 use macroquad::{material::Material, math::Vec2, miniquad::UniformDesc};
 use rug::Complex;
@@ -13,6 +14,8 @@ pub enum FractalType {
     Mandelbrot,
     #[strum(serialize = "Julia Set")]
     Julia,
+    #[strum(serialize = "Mandelbrot Set Perturbation")]
+    MandelbrotPerturb,
 }
 
 impl FractalType {
@@ -23,7 +26,10 @@ impl FractalType {
             }),
             FractalType::Julia => Box::new(julia::Julia {
                 max_iter: DEFAULT_MAX_ITER,
-                c: Complex::with_val(PRECISION, (-0.7269, 0.1889)),
+                c: Complex::with_val(PRECISION, (-0.8, 0.156)),
+            }),
+            FractalType::MandelbrotPerturb => Box::new(mandelbrot_perturb::MandelbrotPerturb {
+                max_iter: DEFAULT_MAX_ITER
             }),
         }
     }
@@ -40,14 +46,14 @@ impl FractalType {
 /// Describes a fractal that can be rendered at runtime
 pub trait Fractal {
     /// Get the fragment shader for this fractal
-    fn fragment_shader(&self) -> &'static str;
+    fn fragment_shader(&self) -> String;
     /// Get the uniform descriptions for the fragment shader
     fn uniform_descs(&self) -> Vec<UniformDesc>;
     /// Set the uniform values to the provided material
     ///
     /// Must set the uniform descriptions on the material first otherwise
     /// this will not work
-    fn set_uniforms(&self, material: &Material);
+    fn set_uniforms(&self, material: &Material, c: &Complex);
     /// Return the orbit for the given complex point
     fn orbit(&self, point: &Complex) -> Vec<Vec2>;
     /// Input the given complex value into the fractal
